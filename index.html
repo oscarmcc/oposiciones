@@ -1,789 +1,341 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-50">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma de Test - Oposiciones</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-    </style>
+    <!-- Tailwind CSS para diseño -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="h-full text-slate-800 flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- Header Navigation -->
-    <header class="bg-indigo-900 text-white shadow-md">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="app.showConfigScreen()">
-                <div class="bg-indigo-700 p-2 rounded-lg text-indigo-200">
-                    <i class="fa-solid fa-graduation-cap text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">OpoTest Studio</h1>
-                    <p class="text-xs text-indigo-300">Preparación de Oposiciones</p>
-                </div>
-            </div>
-            <div id="header-stats" class="hidden sm:flex items-center space-x-4 text-xs text-indigo-200">
-                <span id="header-available-count" class="bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-700/50">
-                    <i class="fa-solid fa-book-open mr-1"></i> <span id="header-total-q">0</span> Preguntas disponibles
-                </span>
-            </div>
+    <!-- HEADER -->
+    <header class="bg-blue-600 text-white shadow-md py-4 px-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-tight">📚 Test Oposiciones</h1>
+            <span id="header-subtitle" class="text-xs bg-blue-700 py-1 px-3 rounded-full font-medium">Modo Configuración</span>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="max-w-2xl w-full mx-auto p-4 sm:p-6 my-auto flex-grow flex items-center">
 
-        <!-- ========================================== -->
-        <!-- SCREEN 1: CONFIGURATION / MENU SCREEN -->
-        <!-- ========================================== -->
-        <section id="config-screen" class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all">
-            <div class="border-b border-slate-100 pb-5 mb-6 flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-900">Configurar Ronda de Test</h2>
-                    <p class="text-slate-500 text-sm mt-1">Selecciona los temas y parámetros para comenzar a estudiar</p>
+        <!-- 1. PANTALLA DE CONFIGURACIÓN -->
+        <section id="config-screen" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 w-full transition-all">
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Configura tu ronda de test</h2>
+            <p class="text-sm text-slate-500 mb-6">Selecciona los temas que deseas repasar y el número de preguntas para practicar.</p>
+
+            <!-- Selección de Temas -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-sm font-semibold text-slate-700">Temarios disponibles:</label>
+                    <div class="space-x-2 text-xs">
+                        <button type="button" onclick="selectAllTopics(true)" class="text-blue-600 hover:underline font-medium">Marcar todos</button>
+                        <span class="text-slate-300">|</span>
+                        <button type="button" onclick="selectAllTopics(false)" class="text-slate-500 hover:underline font-medium">Desmarcar todos</button>
+                    </div>
                 </div>
-                <div class="hidden md:block">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                        <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full"></span> Modo Estudio Activo
-                    </span>
+                <div id="topics-container" class="space-y-2 max-h-48 overflow-y-auto pr-1 border border-slate-100 p-2 rounded-xl bg-slate-50">
+                    <!-- Se inyectan dinámicamente -->
                 </div>
             </div>
 
-            <form id="config-form" onsubmit="app.startQuiz(event)" class="space-y-6">
-                <!-- Select Topics -->
-                <div>
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="block text-sm font-semibold text-slate-700">
-                            <i class="fa-solid fa-layer-group text-indigo-600 mr-1.5"></i> Temas incluidos
-                        </label>
-                        <div class="space-x-2 text-xs">
-                            <button type="button" onclick="app.selectAllTopics(true)" class="text-indigo-600 hover:text-indigo-800 font-medium hover:underline">Seleccionar todos</button>
-                            <span class="text-slate-300">|</span>
-                            <button type="button" onclick="app.selectAllTopics(false)" class="text-slate-500 hover:text-slate-700 hover:underline">Desmarcar todos</button>
-                        </div>
-                    </div>
-                    <div id="topics-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto p-1 custom-scrollbar">
-                        <!-- Dynamic Checkboxes loaded here -->
-                    </div>
-                    <p id="topic-error" class="text-rose-500 text-xs mt-2 hidden">Debes seleccionar al menos un tema.</p>
-                </div>
-
-                <!-- Number of Questions & Ordering -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                    <!-- Dynamic Input Questions Count -->
+            <!-- Cantidad de Preguntas y botón "Todas" -->
+            <div class="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label for="question-limit-input" class="block text-sm font-semibold text-slate-700">
-                                <i class="fa-solid fa-list-ol text-indigo-600 mr-1.5"></i> Cantidad de preguntas
-                            </label>
-                            <span id="available-questions-label" class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                                Disponibles: 0
-                            </span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <input type="number" id="question-limit-input" min="1" max="10" value="10" 
-                                oninput="app.validateQuestionInput()"
-                                class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 transition-colors font-semibold">
-                            
-                            <button type="button" onclick="app.selectAllAvailableQuestions()" 
-                                class="px-4 py-3 bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl hover:bg-indigo-200 focus:outline-none transition-colors shrink-0 shadow-sm">
-                                Todas
-                            </button>
-                        </div>
-                        <p class="text-[11px] text-slate-400 mt-1">Máximo disponible ajustado automáticamente según temas activos.</p>
+                        <label for="num-questions" class="block text-sm font-semibold text-slate-700 mb-1">Número de preguntas:</label>
+                        <p class="text-xs text-slate-500">Disponibles en total: <span id="max-available-label" class="font-bold text-slate-700">0</span></p>
                     </div>
-
-                    <!-- Question Order & Options -->
-                    <div>
-                        <label for="question-order" class="block text-sm font-semibold text-slate-700 mb-2">
-                            <i class="fa-solid fa-shuffle text-indigo-600 mr-1.5"></i> Orden de las preguntas
-                        </label>
-                        <select id="question-order" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 transition-colors">
-                            <option value="random" selected>Aleatorio (Mezclar preguntas)</option>
-                            <option value="sequential">Orden correlativo del temario</option>
-                        </select>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="num-questions" min="1" value="10" 
+                            class="w-24 px-3 py-2 bg-white border border-slate-300 rounded-lg text-center font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button type="button" id="btn-select-all-questions" onclick="setMaxQuestions()" 
+                            class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-3 py-2.5 rounded-lg transition-colors">
+                            Todas
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Start Button -->
-                <div class="pt-4 border-t border-slate-100 flex justify-end">
-                    <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-200 transition-all transform active:scale-95">
-                        <i class="fa-solid fa-play mr-2 text-sm"></i> Comenzar Test
-                    </button>
-                </div>
-            </form>
+            <!-- Botón Iniciar -->
+            <button onclick="startTest()" id="start-btn" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                <span>Comenzar Test</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
         </section>
 
-        <!-- ========================================== -->
-        <!-- SCREEN 2: TEST / QUESTION SCREEN -->
-        <!-- ========================================== -->
-        <section id="quiz-screen" class="hidden bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all">
-            <!-- Top Progress Header -->
-            <div class="mb-6">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md" id="current-topic-badge">
-                        Tema 1
-                    </span>
-                    <span class="text-sm font-semibold text-slate-500" id="progress-text">
-                        Pregunta 1 de 10
-                    </span>
-                </div>
-                <!-- Progress Bar -->
-                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                    <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 10%"></div>
-                </div>
+        <!-- 2. PANTALLA DE TEST EN CURSO -->
+        <section id="test-screen" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 w-full">
+            <div class="flex justify-between items-center mb-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <span id="current-topic-badge" class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md">Tema</span>
+                <span>Pregunta <span id="current-index">1</span> de <span id="total-questions-count">10</span></span>
             </div>
 
-            <!-- Question Statement -->
-            <div class="mb-6">
-                <h3 id="question-text" class="text-lg sm:text-xl font-semibold text-slate-900 leading-relaxed">
-                    ¿Cargando enunciado...?
-                </h3>
+            <!-- Barra de progreso -->
+            <div class="w-full bg-slate-100 h-2 rounded-full mb-6 overflow-hidden">
+                <div id="progress-bar" class="bg-blue-600 h-full transition-all duration-300" style="width: 0%"></div>
             </div>
 
-            <!-- Options Grid -->
-            <div id="options-container" class="space-y-3 mb-6">
-                <!-- Option buttons dynamically generated -->
-            </div>
+            <!-- Enunciado -->
+            <h3 id="question-text" class="text-lg sm:text-xl font-semibold text-slate-900 mb-6"></h3>
 
-            <!-- Explanation Box (Hidden by default, shown upon answering) -->
-            <div id="explanation-box" class="hidden mb-6 p-4 rounded-xl border transition-all duration-300">
-                <div class="flex items-start space-x-3">
-                    <div id="explanation-icon" class="text-xl mt-0.5"></div>
-                    <div class="flex-1">
-                        <h4 id="explanation-title" class="font-bold text-sm mb-1">Explicación</h4>
-                        <p id="explanation-text" class="text-sm leading-relaxed"></p>
-                    </div>
-                </div>
-            </div>
+            <!-- Opciones -->
+            <div id="options-container" class="space-y-3 mb-6"></div>
 
-            <!-- Action Navigation -->
-            <div class="flex justify-between items-center pt-4 border-t border-slate-100">
-                <button type="button" onclick="app.confirmExit()" class="text-slate-400 hover:text-slate-600 text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">
-                    <i class="fa-solid fa-arrow-left mr-1"></i> Salir
-                </button>
-                <button id="next-btn" type="button" onclick="app.nextQuestion()" disabled class="inline-flex items-center px-6 py-2.5 bg-indigo-600 text-white font-medium text-sm rounded-xl hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md transition-all">
-                    Siguiente <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
-                </button>
-            </div>
+            <!-- Explicación -->
+            <div id="explanation-box" class="hidden mb-6 p-4 rounded-xl border text-sm"></div>
+
+            <!-- Botón Siguiente -->
+            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-6 rounded-xl transition-all">
+                Siguiente Pregunta
+            </button>
         </section>
 
-        <!-- ========================================== -->
-        <!-- SCREEN 3: RESULTS & REVIEW SCREEN -->
-        <!-- ========================================== -->
-        <section id="results-screen" class="hidden bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all">
-            <div class="text-center pb-6 border-b border-slate-100">
-                <div id="result-badge-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3">
-                    <!-- Icon loaded dynamically -->
+        <!-- 3. PANTALLA DE RESULTADOS -->
+        <section id="results-screen" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 w-full">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-full text-2xl font-bold mb-3 shadow-inner">
+                    <span id="score-percentage">0%</span>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-900" id="result-title">¡Ronda Finalizada!</h2>
-                <p class="text-slate-500 text-sm mt-1" id="result-subtitle">Aquí tienes el resumen de tu desempeño</p>
+                <h2 class="text-2xl font-bold text-slate-900">¡Test Finalizado!</h2>
+                <p class="text-sm text-slate-500 mt-1">Has acertado <span id="score-correct" class="font-bold text-slate-700">0</span> de <span id="score-total" class="font-bold text-slate-700">0</span> preguntas.</p>
             </div>
 
-            <!-- Score Stats Grid -->
-            <div class="grid grid-cols-3 gap-3 sm:gap-4 my-6">
-                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 sm:p-4 text-center">
-                    <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Aciertos</p>
-                    <p class="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1" id="score-correct">0</p>
-                </div>
-                <div class="bg-rose-50 border border-rose-100 rounded-xl p-3 sm:p-4 text-center">
-                    <p class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Fallos</p>
-                    <p class="text-2xl sm:text-3xl font-extrabold text-rose-700 mt-1" id="score-incorrect">0</p>
-                </div>
-                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 sm:p-4 text-center">
-                    <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Acierto</p>
-                    <p class="text-2xl sm:text-3xl font-extrabold text-indigo-700 mt-1" id="score-percentage">0%</p>
-                </div>
-            </div>
-
-            <!-- Detailed Question Review Accordion/List -->
-            <div class="mb-6">
-                <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center">
-                    <i class="fa-solid fa-list-check mr-2 text-indigo-600"></i> Desglose de preguntas
-                </h3>
-                <div id="review-list" class="space-y-3 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
-                    <!-- Review items injected here -->
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row justify-center gap-3 pt-4 border-t border-slate-100">
-                <button type="button" onclick="app.repeatRound()" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
-                    <i class="fa-solid fa-rotate-right mr-2 text-slate-500"></i> Repetir esta ronda
+            <div class="flex gap-3">
+                <button onclick="resetToConfig()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors text-sm">
+                    Configurar Nuevo Test
                 </button>
-                <button type="button" onclick="app.showConfigScreen()" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 shadow-md transition-colors">
-                    <i class="fa-solid fa-house mr-2"></i> Volver al Menú
+                <button onclick="restartSameTest()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm shadow-md">
+                    Repetir Test
                 </button>
             </div>
         </section>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-100 border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        <p>OpoTest Studio &bull; Diseñado para facilitar el estudio diario de tu oposición.</p>
+    <footer class="text-center py-4 text-xs text-slate-400">
+        Plataforma de Oposiciones &bull; Estudio Autónomo
     </footer>
 
-    <!-- ========================================== -->
-    <!-- JAVASCRIPT: DATA STRUCTURE & LOGIC -->
-    <!-- ========================================== -->
+    <!-- 1. Carga del banco de preguntas externo -->
+    <script src="index.js"></script>
+
+    <!-- 2. Lógica de la aplicación -->
     <script>
-        /**
-         * =========================================================================
-         *  GUÍA PARA AÑADIR/EDITAR PREGUNTAS Y TEMAS
-         * =========================================================================
-         *  Para añadir tus propias preguntas, modifica el objeto `QUESTION_BANK`.
-         *  
-         *  Estructura:
-         *  "ID_DEL_TEMA": {
-         *      title: "Nombre del Tema",
-         *      questions: [
-         *          {
-         *              id: 1, // ID único por pregunta
-         *              question: "Enunciado de la pregunta aquí...",
-         *              options: {
-         *                  A: "Opción A",
-         *                  B: "Opción B",
-         *                  C: "Opción C",
-         *                  D: "Opción D"
-         *              },
-         *              correct: "A", // Letra en mayúscula de la respuesta correcta ("A", "B", "C" o "D")
-         *              explanation: "Explicación detallada de por qué es correcta según la norma o ley..."
-         *          }
-         *      ]
-         *  }
-         * =========================================================================
-         */
+        let currentQuizQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answeredCurrent = false;
 
-        const QUESTION_BANK = {
-            "tema_1": {
-                title: "Tema 1: La Constitución Española de 1978",
-                questions: [
-                    {
-                        id: 101,
-                        question: "¿En qué fecha fue aprobada la Constitución Española por las Cortes Generales?",
-                        options: {
-                            A: "6 de diciembre de 1978",
-                            B: "31 de octubre de 1978",
-                            C: "27 de diciembre de 1978",
-                            D: "29 de diciembre de 1978"
-                        },
-                        correct: "B",
-                        explanation: "Las Cortes Generales aprobaron la Constitución el 31 de octubre de 1978. Posteriormente fue ratificada en referéndum por el pueblo español el 6 de diciembre y sancionada por el Rey el 27 de diciembre."
-                    },
-                    {
-                        id: 102,
-                        question: "Según el artículo 1.1 de la CE, España se constituye en un Estado:",
-                        options: {
-                            A: "Social y democrático de Derecho",
-                            B: "Liberal y democrático de Derecho",
-                            C: "Federal y democrático",
-                            D: "Social, autogestionado y de Derecho"
-                        },
-                        correct: "A",
-                        explanation: "El Artículo 1.1 establece expresamente: 'España se constituye en un Estado social y democrático de Derecho, que propugna como valores superiores de su ordenamiento jurídico la libertad, la justicia, la igualdad y el pluralismo político'."
-                    },
-                    {
-                        id: 103,
-                        question: "¿A quién corresponde la soberanía nacional según el artículo 1.2 de la Constitución?",
-                        options: {
-                            A: "Al Rey D. Felipe VI",
-                            B: "Al Presidente del Gobierno",
-                            C: "Al Pueblo español, del que emanan los poderes del Estado",
-                            D: "A las Cortes Generales"
-                        },
-                        correct: "C",
-                        explanation: "El Art. 1.2 de la CE señala textualmente que 'La soberanía nacional reside en el pueblo español, del que emanan los poderes del Estado'."
-                    },
-                    {
-                        id: 104,
-                        question: "¿Cuál de los siguientes NO es un valor superior del ordenamiento jurídico según el Art. 1.1 de la CE?",
-                        options: {
-                            A: "La libertad",
-                            B: "La fraternidad",
-                            C: "La justicia",
-                            D: "El pluralismo político"
-                        },
-                        correct: "B",
-                        explanation: "Los cuatro valores superiores recogidos en el Art. 1.1 son: la libertad, la justicia, la igualdad y el pluralismo político. La 'fraternidad' no figura expresamente como tal."
-                    }
-                ]
-            },
-            "tema_2": {
-                title: "Tema 2: El Procedimiento Administrativo Común (Ley 39/2015)",
-                questions: [
-                    {
-                        id: 201,
-                        question: "Según la Ley 39/2015, ¿tienen capacidad de obrar ante las Administraciones Públicas los menores de edad?",
-                        options: {
-                            A: "En ningún caso, siempre requieren representante legal",
-                            B: "Sí, para el ejercicio y defensa de sus derechos sin asistencia cuando el ordenamiento lo permita",
-                            C: "Sí, siempre que sean mayores de 14 años",
-                            D: "Solo con autorización judicial previa"
-                        },
-                        correct: "B",
-                        explanation: "El Art. 3.a de la Ley 39/2015 reconoce capacidad de obrar a los menores de edad para el ejercicio y defensa de aquellos de sus derechos e intereses cuya actuación esté permitida por el ordenamiento jurídico sin la asistencia de la persona que ejerza la patria potestad, tutela o curatela."
-                    },
-                    {
-                        id: 202,
-                        question: "¿Cuál es el plazo general para la subsanación de una solicitud según la Ley 39/2015?",
-                        options: {
-                            A: "5 días",
-                            B: "10 días",
-                            C: "15 días",
-                            D: "1 mes"
-                        },
-                        correct: "B",
-                        explanation: "El Art. 68.1 de la Ley 39/2015 concede un plazo general de diez días (ampliable discrecionalmente hasta cinco días más en determinados casos) para subsanar deficiencias o aportar los documentos requeridos."
-                    },
-                    {
-                        id: 203,
-                        question: "Salvo fijación por norma comunitaria o ley, ¿cuál es el plazo máximo general para resolver y notificar un procedimiento administrativo?",
-                        options: {
-                            A: "1 mes",
-                            B: "3 meses",
-                            C: "6 meses",
-                            D: "1 año"
-                        },
-                        correct: "B",
-                        explanation: "El Art. 21.3 de la Ley 39/2015 fija que cuando las normas reguladoras de los procedimientos no fijen el plazo máximo, este será de tres meses."
-                    }
-                ]
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof QUESTION_BANK !== 'undefined') {
+                renderTopicsList();
+                updateMaxQuestionsLimit();
+            } else {
+                alert("No se pudo cargar el archivo index.js. Asegúrate de que están en la misma carpeta.");
             }
-        };
+        });
 
-        // ==========================================
-        // APPLICATION CONTROLLER & LOGIC
-        // ==========================================
+        function renderTopicsList() {
+            const container = document.getElementById('topics-container');
+            container.innerHTML = '';
 
-        class QuizApp {
-            constructor() {
-                this.selectedTopicIds = [];
-                this.questionsPool = [];
-                this.currentIndex = 0;
-                this.userAnswers = [];
-                this.currentQuestion = null;
-                this.isAnswered = false;
-                this.maxAvailableQuestions = 0;
-
-                // DOM Elements Cache
-                this.screens = {
-                    config: document.getElementById('config-screen'),
-                    quiz: document.getElementById('quiz-screen'),
-                    results: document.getElementById('results-screen')
-                };
-
-                this.init();
-            }
-
-            init() {
-                this.renderTopicList();
-                this.updateTotalQuestionCounter();
-                this.updateAvailableQuestionsCount();
-            }
-
-            // Render available topic checkboxes in the config screen
-            renderTopicList() {
-                const container = document.getElementById('topics-container');
-                container.innerHTML = '';
-
-                Object.keys(QUESTION_BANK).forEach(topicKey => {
-                    const topic = QUESTION_BANK[topicKey];
-                    const count = topic.questions.length;
-
-                    const label = document.createElement('label');
-                    label.className = "flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-indigo-50/50 hover:border-indigo-200 cursor-pointer transition-all";
-                    label.innerHTML = `
-                        <input type="checkbox" value="${topicKey}" checked 
-                            onchange="app.updateAvailableQuestionsCount()"
-                            class="topic-checkbox w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
-                        <div class="ml-3 flex-1 flex justify-between items-center">
-                            <span class="text-xs font-semibold text-slate-800">${topic.title}</span>
-                            <span class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-medium ml-2">${count} preg.</span>
-                        </div>
-                    `;
-                    container.appendChild(label);
-                });
-            }
-
-            // Calculate available questions based on active checkboxes
-            updateAvailableQuestionsCount() {
-                const checkboxes = document.querySelectorAll('.topic-checkbox:checked');
-                let total = 0;
-                
-                checkboxes.forEach(cb => {
-                    const topic = QUESTION_BANK[cb.value];
-                    if (topic) {
-                        total += topic.questions.length;
-                    }
-                });
-
-                this.maxAvailableQuestions = total;
-                const availableLabel = document.getElementById('available-questions-label');
-                const inputNum = document.getElementById('question-limit-input');
-
-                availableLabel.textContent = `Disponibles: ${total}`;
-                inputNum.max = total;
-
-                if (total === 0) {
-                    inputNum.value = 0;
-                    inputNum.min = 0;
-                } else {
-                    inputNum.min = 1;
-                    if (parseInt(inputNum.value, 10) > total || parseInt(inputNum.value, 10) === 0) {
-                        inputNum.value = total;
-                    }
-                }
-            }
-
-            // Input validation on manual typing
-            validateQuestionInput() {
-                const inputNum = document.getElementById('question-limit-input');
-                let val = parseInt(inputNum.value, 10);
-
-                if (isNaN(val) || val < 1) {
-                    if (this.maxAvailableQuestions > 0) {
-                        inputNum.value = 1;
-                    }
-                } else if (val > this.maxAvailableQuestions) {
-                    inputNum.value = this.maxAvailableQuestions;
-                }
-            }
-
-            // Set input value to maximum available directly
-            selectAllAvailableQuestions() {
-                const inputNum = document.getElementById('question-limit-input');
-                inputNum.value = this.maxAvailableQuestions;
-            }
-
-            // Calculate total questions in dataset
-            updateTotalQuestionCounter() {
-                let total = 0;
-                Object.values(QUESTION_BANK).forEach(t => total += t.questions.length);
-                document.getElementById('header-total-q').textContent = total;
-            }
-
-            // Select or Deselect all topics
-            selectAllTopics(status) {
-                const checkboxes = document.querySelectorAll('.topic-checkbox');
-                checkboxes.forEach(cb => cb.checked = status);
-                document.getElementById('topic-error').classList.add('hidden');
-                this.updateAvailableQuestionsCount();
-            }
-
-            // Screen Switcher Helper
-            showScreen(screenName) {
-                Object.keys(this.screens).forEach(key => {
-                    if (key === screenName) {
-                        this.screens[key].classList.remove('hidden');
-                    } else {
-                        this.screens[key].classList.add('hidden');
-                    }
-                });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-
-            showConfigScreen() {
-                this.showScreen('config');
-                this.updateAvailableQuestionsCount();
-            }
-
-            // Start Quiz Event
-            startQuiz(e) {
-                e.preventDefault();
-
-                // 1. Collect selected topics
-                const checkboxes = document.querySelectorAll('.topic-checkbox:checked');
-                this.selectedTopicIds = Array.from(checkboxes).map(cb => cb.value);
-
-                if (this.selectedTopicIds.length === 0 || this.maxAvailableQuestions === 0) {
-                    document.getElementById('topic-error').classList.remove('hidden');
-                    return;
-                } else {
-                    document.getElementById('topic-error').classList.add('hidden');
-                }
-
-                // 2. Gather all matching questions
-                let pool = [];
-                this.selectedTopicIds.forEach(topicId => {
-                    const topic = QUESTION_BANK[topicId];
-                    if (topic) {
-                        topic.questions.forEach(q => {
-                            pool.push({
-                                ...q,
-                                topicTitle: topic.title
-                            });
-                        });
-                    }
-                });
-
-                // 3. Shuffle or Order questions
-                const orderOption = document.getElementById('question-order').value;
-                if (orderOption === 'random') {
-                    pool = this.shuffleArray(pool);
-                }
-
-                // 4. Limit questions count according to custom input
-                const limitInput = parseInt(document.getElementById('question-limit-input').value, 10);
-                const limit = isNaN(limitInput) ? pool.length : Math.min(limitInput, pool.length);
-                this.questionsPool = pool.slice(0, limit);
-
-                // 5. Reset states & Start
-                this.currentIndex = 0;
-                this.userAnswers = [];
-                this.showScreen('quiz');
-                this.loadQuestion();
-            }
-
-            // Load and Render current question
-            loadQuestion() {
-                this.isAnswered = false;
-                this.currentQuestion = this.questionsPool[this.currentIndex];
-
-                // Disable Next button initially
-                const nextBtn = document.getElementById('next-btn');
-                nextBtn.disabled = true;
-
-                // Hide explanation box
-                const explanationBox = document.getElementById('explanation-box');
-                explanationBox.classList.add('hidden');
-
-                // Update UI Badges & Progress
-                document.getElementById('current-topic-badge').textContent = this.currentQuestion.topicTitle;
-                document.getElementById('progress-text').textContent = `Pregunta ${this.currentIndex + 1} de ${this.questionsPool.length}`;
-                
-                const percentage = ((this.currentIndex + 1) / this.questionsPool.length) * 100;
-                document.getElementById('progress-bar').style.width = `${percentage}%`;
-
-                // Set Question Text
-                document.getElementById('question-text').textContent = `${this.currentIndex + 1}. ${this.currentQuestion.question}`;
-
-                // Render Options (A, B, C, D)
-                const optionsContainer = document.getElementById('options-container');
-                optionsContainer.innerHTML = '';
-
-                Object.keys(this.currentQuestion.options).forEach(key => {
-                    const optionText = this.currentQuestion.options[key];
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = `option-btn w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 flex items-start transition-all duration-200 group`;
-                    button.dataset.key = key;
-                    button.onclick = () => this.handleAnswerSelect(key);
-
-                    button.innerHTML = `
-                        <span class="option-key inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-sm mr-3 border border-slate-300 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors shrink-0">
-                            ${key}
-                        </span>
-                        <span class="text-sm font-medium text-slate-800 mt-0.5 leading-snug flex-1">${optionText}</span>
-                        <span class="option-icon ml-2 shrink-0 text-lg hidden"></span>
-                    `;
-
-                    optionsContainer.appendChild(button);
-                });
-            }
-
-            // Answer validation
-            handleAnswerSelect(selectedKey) {
-                if (this.isAnswered) return; // Prevent changing answer
-                this.isAnswered = true;
-
-                const isCorrect = (selectedKey === this.currentQuestion.correct);
-
-                // Record answer
-                this.userAnswers.push({
-                    question: this.currentQuestion,
-                    selectedOption: selectedKey,
-                    isCorrect: isCorrect
-                });
-
-                // Style option buttons
-                const buttons = document.querySelectorAll('.option-btn');
-                buttons.forEach(btn => {
-                    const key = btn.dataset.key;
-                    btn.classList.remove('hover:border-indigo-300', 'hover:bg-indigo-50/30');
-                    btn.classList.add('cursor-default');
-
-                    const iconSpan = btn.querySelector('.option-icon');
-                    const keySpan = btn.querySelector('.option-key');
-
-                    if (key === this.currentQuestion.correct) {
-                        // Highlight correct answer in Green
-                        btn.className = "option-btn w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 flex items-start transition-all";
-                        keySpan.className = "option-key inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold text-sm mr-3 shrink-0";
-                        iconSpan.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
-                        iconSpan.classList.remove('hidden');
-                    } else if (key === selectedKey && !isCorrect) {
-                        // Highlight wrong answer in Red
-                        btn.className = "option-btn w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50/60 flex items-start transition-all";
-                        keySpan.className = "option-key inline-flex items-center justify-center w-7 h-7 rounded-lg bg-rose-600 text-white font-bold text-sm mr-3 shrink-0";
-                        iconSpan.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-600"></i>';
-                        iconSpan.classList.remove('hidden');
-                    } else {
-                        // Dim other options
-                        btn.classList.add('opacity-50');
-                    }
-                });
-
-                // Show Explanation Box
-                this.showExplanation(isCorrect);
-
-                // Enable Next Question Button
-                document.getElementById('next-btn').disabled = false;
-            }
-
-            // Display Explanation Box
-            showExplanation(isCorrect) {
-                const box = document.getElementById('explanation-box');
-                const icon = document.getElementById('explanation-icon');
-                const title = document.getElementById('explanation-title');
-                const text = document.getElementById('explanation-text');
-
-                box.classList.remove('hidden');
-
-                if (isCorrect) {
-                    box.className = "mb-6 p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 text-emerald-900";
-                    icon.innerHTML = '<i class="fa-solid fa-lightbulb text-emerald-600"></i>';
-                    title.textContent = "¡Respuesta Correcta!";
-                    title.className = "font-bold text-sm mb-1 text-emerald-800";
-                } else {
-                    box.className = "mb-6 p-4 rounded-xl border bg-slate-50 border-slate-200 text-slate-800";
-                    icon.innerHTML = '<i class="fa-solid fa-circle-info text-indigo-600"></i>';
-                    title.textContent = "Explicación / Justificación:";
-                    title.className = "font-bold text-sm mb-1 text-slate-900";
-                }
-
-                text.textContent = this.currentQuestion.explanation || "No hay explicación disponible para esta pregunta.";
-            }
-
-            // Go to next question or complete test
-            nextQuestion() {
-                this.currentIndex++;
-                if (this.currentIndex < this.questionsPool.length) {
-                    this.loadQuestion();
-                } else {
-                    this.finishQuiz();
-                }
-            }
-
-            // End Quiz & Render Results Screen
-            finishQuiz() {
-                this.showScreen('results');
-
-                const total = this.userAnswers.length;
-                const correctCount = this.userAnswers.filter(a => a.isCorrect).length;
-                const incorrectCount = total - correctCount;
-                const percentage = Math.round((correctCount / total) * 100);
-
-                // Update Stats
-                document.getElementById('score-correct').textContent = correctCount;
-                document.getElementById('score-incorrect').textContent = incorrectCount;
-                document.getElementById('score-percentage').textContent = `${percentage}%`;
-
-                // Badge styling depending on result
-                const badgeIcon = document.getElementById('result-badge-icon');
-                const title = document.getElementById('result-title');
-                const subtitle = document.getElementById('result-subtitle');
-
-                if (percentage >= 70) {
-                    badgeIcon.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-emerald-100 text-emerald-600";
-                    badgeIcon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-                    title.textContent = "¡Excelente Resultado!";
-                    subtitle.textContent = "Has demostrado un buen dominio del temario.";
-                } else if (percentage >= 50) {
-                    badgeIcon.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-amber-100 text-amber-600";
-                    badgeIcon.innerHTML = '<i class="fa-solid fa-thumbs-up"></i>';
-                    title.textContent = "¡Aprobado!";
-                    subtitle.textContent = "Buen intento, pero conviene repasar algunos fallos.";
-                } else {
-                    badgeIcon.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-rose-100 text-rose-600";
-                    badgeIcon.innerHTML = '<i class="fa-solid fa-book-bookmark"></i>';
-                    title.textContent = "Necesitas Repasar";
-                    subtitle.textContent = "Revisa las explicaciones de abajo para reforzar los conceptos.";
-                }
-
-                // Render Detailed Breakdown
-                const reviewList = document.getElementById('review-list');
-                reviewList.innerHTML = '';
-
-                this.userAnswers.forEach((ans, idx) => {
-                    const item = document.createElement('div');
-                    item.className = `p-4 rounded-xl border ${ans.isCorrect ? 'border-emerald-200 bg-emerald-50/30' : 'border-rose-200 bg-rose-50/30'}`;
-                    
-                    item.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <span class="text-xs font-semibold text-slate-500">${ans.question.topicTitle}</span>
-                            <span class="text-xs font-bold px-2 py-0.5 rounded-full ${ans.isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                                ${ans.isCorrect ? 'Correcta' : 'Incorrecta'}
-                            </span>
-                        </div>
-                        <p class="font-semibold text-slate-800 text-sm mt-1">${idx + 1}. ${ans.question.question}</p>
-                        <div class="mt-2 text-xs space-y-1">
-                            <p class="${ans.isCorrect ? 'text-emerald-700 font-medium' : 'text-rose-700 font-medium'}">
-                                Tu respuesta: (${ans.selectedOption}) ${ans.question.options[ans.selectedOption]}
-                            </p>
-                            ${!ans.isCorrect ? `<p class="text-emerald-700 font-medium">Respuesta correcta: (${ans.question.correct}) ${ans.question.options[ans.question.correct]}</p>` : ''}
-                        </div>
-                        <p class="text-xs text-slate-600 mt-2 pt-2 border-t border-slate-200/60">
-                            <span class="font-bold text-slate-700">Explicación:</span> ${ans.question.explanation}
-                        </p>
-                    `;
-                    reviewList.appendChild(item);
-                });
-            }
-
-            // Repeat the current round
-            repeatRound() {
-                this.currentIndex = 0;
-                this.userAnswers = [];
-                this.questionsPool = this.shuffleArray([...this.questionsPool]);
-                this.showScreen('quiz');
-                this.loadQuestion();
-            }
-
-            // Utility: Exit test confirmation
-            confirmExit() {
-                if (confirm("¿Estás seguro de que deseas salir del test? Se perderá el progreso de esta ronda.")) {
-                    this.showConfigScreen();
-                }
-            }
-
-            // Utility: Shuffle array algorithm (Fisher-Yates)
-            shuffleArray(array) {
-                const arr = [...array];
-                for (let i = arr.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [arr[i], arr[j]] = [arr[j], arr[i]];
-                }
-                return arr;
+            for (const [key, tema] of Object.entries(QUESTION_BANK)) {
+                const count = tema.questions.length;
+                const div = document.createElement('label');
+                div.className = 'flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 cursor-pointer hover:border-blue-300 transition-colors';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" value="${key}" checked onchange="updateMaxQuestionsLimit()" 
+                            class="topic-checkbox w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-700">${tema.title}</span>
+                    </div>
+                    <span class="text-xs bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full">${count} preg.</span>
+                `;
+                container.appendChild(div);
             }
         }
 
-        // Initialize App on Window Load
-        let app;
-        window.addEventListener('DOMContentLoaded', () => {
-            app = new QuizApp();
-        });
+        function selectAllTopics(select) {
+            const checkboxes = document.querySelectorAll('.topic-checkbox');
+            checkboxes.forEach(cb => cb.checked = select);
+            updateMaxQuestionsLimit();
+        }
+
+        function getSelectedTopics() {
+            const checkboxes = document.querySelectorAll('.topic-checkbox:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function updateMaxQuestionsLimit() {
+            const selectedTopics = getSelectedTopics();
+            let totalAvailable = 0;
+            selectedTopics.forEach(key => {
+                if (QUESTION_BANK[key]) {
+                    totalAvailable += QUESTION_BANK[key].questions.length;
+                }
+            });
+
+            const maxLabel = document.getElementById('max-available-label');
+            const inputNum = document.getElementById('num-questions');
+            maxLabel.textContent = totalAvailable;
+            inputNum.max = totalAvailable;
+
+            if (totalAvailable === 0) {
+                inputNum.value = 0;
+            } else if (parseInt(inputNum.value) > totalAvailable || parseInt(inputNum.value) <= 0) {
+                inputNum.value = totalAvailable;
+            }
+        }
+
+        function setMaxQuestions() {
+            const max = document.getElementById('max-available-label').textContent;
+            document.getElementById('num-questions').value = max;
+        }
+
+        function startTest() {
+            const selectedTopics = getSelectedTopics();
+            if (selectedTopics.length === 0) {
+                alert("Por favor, selecciona al menos un tema para comenzar.");
+                return;
+            }
+
+            let pool = [];
+            selectedTopics.forEach(key => {
+                if (QUESTION_BANK[key]) {
+                    pool = pool.concat(QUESTION_BANK[key].questions);
+                }
+            });
+
+            const requestedNum = parseInt(document.getElementById('num-questions').value) || pool.length;
+            
+            // Mezclar preguntas aleatoriamente
+            pool.sort(() => Math.random() - 0.5);
+
+            currentQuizQuestions = pool.slice(0, requestedNum);
+            currentIndex = 0;
+            score = 0;
+
+            document.getElementById('config-screen').classList.add('hidden');
+            document.getElementById('test-screen').classList.remove('hidden');
+            document.getElementById('header-subtitle').textContent = "Modo Examen";
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answeredCurrent = false;
+            const q = currentQuizQuestions[currentIndex];
+            
+            document.getElementById('current-index').textContent = currentIndex + 1;
+            document.getElementById('total-questions-count').textContent = currentQuizQuestions.length;
+            document.getElementById('current-topic-badge').textContent = `Pregunta ${currentIndex + 1}`;
+            
+            const progress = ((currentIndex) / currentQuizQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            document.getElementById('question-text').textContent = q.question;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            for (const [letter, text] of Object.entries(q.options)) {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all font-medium text-slate-700 flex items-start gap-3 option-btn';
+                btn.dataset.letter = letter;
+                btn.onclick = () => selectAnswer(letter);
+                btn.innerHTML = `
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-xs shrink-0">${letter}</span>
+                    <span class="leading-snug">${text}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            }
+
+            document.getElementById('explanation-box').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function selectAnswer(letter) {
+            if (answeredCurrent) return;
+            answeredCurrent = true;
+
+            const q = currentQuizQuestions[currentIndex];
+            const optionBtns = document.querySelectorAll('.option-btn');
+
+            optionBtns.forEach(btn => {
+                const btnLetter = btn.dataset.letter;
+                btn.disabled = true;
+                if (btnLetter === q.correct) {
+                    btn.classList.remove('bg-white', 'hover:bg-slate-50', 'border-slate-200');
+                    btn.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                    btn.querySelector('span').classList.remove('bg-slate-100', 'text-slate-700');
+                    btn.querySelector('span').classList.add('bg-emerald-600', 'text-white');
+                } else if (btnLetter === letter) {
+                    btn.classList.remove('bg-white', 'hover:bg-slate-50', 'border-slate-200');
+                    btn.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
+                    btn.querySelector('span').classList.remove('bg-slate-100', 'text-slate-700');
+                    btn.querySelector('span').classList.add('bg-rose-600', 'text-white');
+                }
+            });
+
+            if (letter === q.correct) {
+                score++;
+            }
+
+            const expBox = document.getElementById('explanation-box');
+            expBox.className = `mb-6 p-4 rounded-xl border text-sm ${letter === q.correct ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'}`;
+            expBox.innerHTML = `<strong>Explicación:</strong> ${q.explanation}`;
+            expBox.classList.remove('hidden');
+
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.classList.remove('hidden');
+            if (currentIndex === currentQuizQuestions.length - 1) {
+                nextBtn.textContent = "Ver Resultados";
+            } else {
+                nextBtn.textContent = "Siguiente Pregunta";
+            }
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuizQuestions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('test-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            document.getElementById('header-subtitle').textContent = "Resultados";
+
+            const percentage = Math.round((score / currentQuizQuestions.length) * 100);
+            document.getElementById('score-percentage').textContent = `${percentage}%`;
+            document.getElementById('score-correct').textContent = score;
+            document.getElementById('score-total').textContent = currentQuizQuestions.length;
+        }
+
+        function resetToConfig() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('config-screen').classList.remove('hidden');
+            document.getElementById('header-subtitle').textContent = "Modo Configuración";
+            updateMaxQuestionsLimit();
+        }
+
+        function restartSameTest() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('test-screen').classList.remove('hidden');
+            document.getElementById('header-subtitle').textContent = "Modo Examen";
+            currentIndex = 0;
+            score = 0;
+            currentQuizQuestions.sort(() => Math.random() - 0.5);
+            loadQuestion();
+        }
     </script>
 </body>
 </html>
