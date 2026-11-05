@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Test - Oposiciones</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-indigo-900 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="app.showConfigScreen()">
+                <div class="bg-indigo-700 p-2 rounded-lg text-indigo-200">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">OpoTest Studio</h1>
+                    <p class="text-xs text-indigo-300">Preparación de Oposiciones</p>
+                </div>
+            </div>
+            <div id="header-stats" class="hidden sm:flex items-center space-x-4 text-xs text-indigo-200">
+                <span id="header-available-count" class="bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-700/50">
+                    <i class="fa-solid fa-book-open mr-1"></i> <span id="header-total-q">0</span> Preguntas disponibles
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-center">
+
+        <!-- ========================================== -->
+        <!-- SCREEN 1: CONFIGURATION / MENU SCREEN -->
+        <!-- ========================================== -->
+        <section id="config-screen" class="bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all">
+            <div class="border-b border-slate-100 pb-5 mb-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Configurar Ronda de Test</h2>
+                    <p class="text-slate-500 text-sm mt-1">Selecciona los temas y parámetros para comenzar a estudiar</p>
+                </div>
+                <div class="hidden md:block">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        <span class="w-2 h-2 mr-1.5 bg-emerald-500 rounded-full"></span> Modo Estudio Activo
+                    </span>
+                </div>
+            </div>
+
+            <form id="config-form" onsubmit="app.startQuiz(event)" class="space-y-6">
+                <!-- Select Topics -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-sm font-semibold text-slate-700">
+                            <i class="fa-solid fa-layer-group text-indigo-600 mr-1.5"></i> Temas incluidos
+                        </label>
+                        <div class="space-x-2 text-xs">
+                            <button type="button" onclick="app.selectAllTopics(true)" class="text-indigo-600 hover:text-indigo-800 font-medium hover:underline">Seleccionar todos</button>
+                            <span class="text-slate-300">|</span>
+                            <button type="button" onclick="app.selectAllTopics(false)" class="text-slate-500 hover:text-slate-700 hover:underline">Desmarcar todos</button>
+                        </div>
+                    </div>
+                    <div id="topics-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto p-1 custom-scrollbar">
+                        <!-- Dynamic Checkboxes loaded here -->
+                    </div>
+                    <p id="topic-error" class="text-rose-500 text-xs mt-2 hidden">Debes seleccionar al menos un tema.</p>
+                </div>
+
+                <!-- Number of Questions & Ordering -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                    <!-- Questions Count -->
+                    <div>
+                        <label for="question-limit" class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-[#list-ol] fa-list-ol text-indigo-600 mr-1.5"></i> Cantidad de preguntas
+                        </label>
+                        <select id="question-limit" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 transition-colors">
+                            <option value="5">5 preguntas</option>
+                            <option value="10" selected>10 preguntas</option>
+                            <option value="20">20 preguntas</option>
+                            <option value="50">50 preguntas</option>
+                            <option value="9999">Todas las disponibles</option>
+                        </select>
+                    </div>
+
+                    <!-- Question Order -->
+                    <div>
+                        <label for="question-order" class="block text-sm font-semibold text-slate-700 mb-2">
+                            <i class="fa-solid fa-shuffle text-indigo-600 mr-1.5"></i> Orden de la ronda
+                        </label>
+                        <select id="question-order" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block p-3 transition-colors">
+                            <option value="random" selected>Aleatorio (Recomendado)</option>
+                            <option value="sequential">Orden original del temario</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Start Button -->
+                <div class="pt-4 border-t border-slate-100 flex justify-end">
+                    <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-medium rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-200 transition-all transform active:scale-95">
+                        <i class="fa-solid fa-play mr-2 text-sm"></i> Comenzar Test
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 2: TEST / QUESTION SCREEN -->
+        <!-- ========================================== -->
+        <section id="quiz-screen" class="hidden bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all">
+            <!-- Top Progress Header -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md" id="current-topic-badge">
+                        Tema 1
+                    </span>
+                    <span class="text-sm font-semibold text-slate-500" id="progress-text">
+                        Pregunta 1 de 10
+                    </span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <!-- Question Statement -->
+            <div class="mb-6">
+                <h3 id="question-text" class="text-lg sm:text-xl font-semibold text-slate-900 leading-relaxed">
+                    ¿Cargando enunciado...?
+                </h3>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- Option buttons dynamically generated -->
+            </div>
+
+            <!-- Explanation Box (Hidden by default, shown upon answering) -->
+            <div id="explanation-box" class="hidden mb-6 p-4 rounded-xl border transition-all duration-300">
+                <div class="flex items-start space-x-3">
+                    <div id="explanation-icon" class="text-xl mt-0.5"></div>
+                    <div class="flex-1">
+                        <h4 id="explanation-title" class="font-bold text-sm mb-1">Explicación</h4>
+                        <p id="explanation-text" class="text-sm leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Navigation -->
+            <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                <button type="button" onclick="app.confirmExit()" class="text-slate-400 hover:text-slate-600 text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Salir
+                </button>
+                <button id="next-btn" type="button" onclick="app.nextQuestion()" disabled class="inline-flex items-center px-6 py-2.5 bg-indigo-600 text-white font-medium text-sm rounded-xl hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-md transition-all">
+                    Siguiente <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 3: RESULTS & REVIEW SCREEN -->
+        <!-- ========================================== -->
+        <section id="results-screen" class="hidden bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8 transition-all">
+            <div class="text-center pb-6 border-b border-slate-100">
+                <div id="result-badge-icon" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3">
+                    <!-- Icon loaded dynamically -->
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900" id="result-title">¡Ronda Finalizada!</h2>
+                <p class="text-slate-500 text-sm mt-1" id="result-subtitle">Aquí tienes el resumen de tu desempeño</p>
+            </div>
+
+            <!-- Score Stats Grid -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4 my-6">
+                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 sm:p-4 text-center">
+                    <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Aciertos</p>
+                    <p class="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1" id="score-correct">0</p>
+                </div>
+                <div class="bg-rose-50 border border-rose-100 rounded-xl p-3 sm:p-4 text-center">
+                    <p class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Fallos</p>
+                    <p class="text-2xl sm:text-3xl font-extrabold text-rose-700 mt-1" id="score-incorrect">0</p>
+                </div>
+                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 sm:p-4 text-center">
+                    <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Acierto</p>
+                    <p class="text-2xl sm:text-3xl font-extrabold text-indigo-700 mt-1" id="score-percentage">0%</p>
+                </div>
+            </div>
+
+            <!-- Detailed Question Review Accordion/List -->
+            <div class="mb-6">
+                <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center">
+                    <i class="fa-solid fa-list-check mr-2 text-indigo-600"></i> Desglose de preguntas
+                </h3>
+                <div id="review-list" class="space-y-3 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                    <!-- Review items injected here -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row justify-center gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="app.repeatRound()" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
+                    <i class="fa-solid fa-rotate-right mr-2 text-slate-500"></i> Repetir esta ronda
+                </button>
+                <button type="button" onclick="app.showConfigScreen()" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 shadow-md transition-colors">
+                    <i class="fa-solid fa-house mr-2"></i> Volver al Menú
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-100 border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <p>OpoTest Studio &bull; Diseñado para facilitar el estudio diario de tu oposición.</p>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT: DATA STRUCTURE & LOGIC -->
+    <!-- ========================================== -->
+    <script>
+        /**
+         * =========================================================================
+         *  GUÍA PARA AÑADIR/EDITAR PREGUNTAS Y TEMAS
+         * =========================================================================
+         *  Para añadir tus propias preguntas, modifica el objeto `QUESTION_BANK`.
+         *  
+         *  Estructura:
+         *  "ID_DEL_TEMA": {
+         *      title: "Nombre del Tema",
+         *      questions: [
+         *          {
+         *              id: 1, // ID único por pregunta
+         *              question: "Enunciado de la pregunta aquí...",
+         *              options: {
+         *                  A: "Opción A",
+         *                  B: "Opción B",
+         *                  C: "Opción C",
+         *                  D: "Opción D"
+         *              },
+         *              correct: "A", // Letra en mayúscula de la respuesta correcta ("A", "B", "C" o "D")
+         *              explanation: "Explicación detallada de por qué es correcta según la norma o ley..."
+         *          }
+         *      ]
+         *  }
+         * =========================================================================
+         */
+
+        const QUESTION_BANK = {
+            "tema_1": {
+                title: "Tema 1: La Constitución Española de 1978",
+                questions: [
+                    {
+                        id: 101,
+                        question: "¿En qué fecha fue aprobada la Constitución Española por las Cortes Generales?",
+                        options: {
+                            A: "6 de diciembre de 1978",
+                            B: "31 de octubre de 1978",
+                            C: "27 de diciembre de 1978",
+                            D: "29 de diciembre de 1978"
+                        },
+                        correct: "B",
+                        explanation: "Las Cortes Generales aprobaron la Constitución el 31 de octubre de 1978. Posteriormente fue ratificada en referéndum por el pueblo español el 6 de diciembre y sancionada por el Rey el 27 de diciembre."
+                    },
+                    {
+                        id: 102,
+                        question: "Según el artículo 1.1 de la CE, España se constituye en un Estado:",
+                        options: {
+                            A: "Social y democrático de Derecho",
+                            B: "Liberal y democrático de Derecho",
+                            C: "Federal y democrático",
+                            D: "Social, autogestionado y de Derecho"
+                        },
+                        correct: "A",
+                        explanation: "El Artículo 1.1 establece expresamente: 'España se constituye en un Estado social y democrático de Derecho, que propugna como valores superiores de su ordenamiento jurídico la libertad, la justicia, la igualdad y el pluralismo político'."
+                    },
+                    {
+                        id: 103,
+                        question: "¿A quién corresponde la soberanía nacional según el artículo 1.2 de la Constitución?",
+                        options: {
+                            A: "Al Rey D. Felipe VI",
+                            B: "Al Presidente del Gobierno",
+                            C: "Al Pueblo español, del que emanan los poderes del Estado",
+                            D: "A las Cortes Generales"
+                        },
+                        correct: "C",
+                        explanation: "El Art. 1.2 de la CE señala textualmente que 'La soberanía nacional reside en el pueblo español, del que emanan los poderes del Estado'."
+                    },
+                    {
+                        id: 104,
+                        question: "¿Cuál de los siguientes NO es un valor superior del ordenamiento jurídico según el Art. 1.1 de la CE?",
+                        options: {
+                            A: "La libertad",
+                            B: "La fraternidad",
+                            C: "La justicia",
+                            D: "El pluralismo político"
+                        },
+                        correct: "B",
+                        explanation: "Los cuatro valores superiores recogidos en el Art. 1.1 son: la libertad, la justicia, la igualdad y el pluralismo político. La 'fraternidad' no figura expresamente como tal."
+                    }
+                ]
+            },
+            "tema_2": {
+                title: "Tema 2: El Procedimiento Administrativo Común (Ley 39/2015)",
+                questions: [
+                    {
+                        id: 201,
+                        question: "Según la Ley 39/2015, ¿tienen capacidad de obrar ante las Administraciones Públicas los menores de edad?",
+                        options: {
+                            A: "En ningún caso, siempre requieren representante legal",
+                            B: "Sí, para el ejercicio y defensa de sus derechos sin asistencia cuando el ordenamiento lo permita",
+                            C: "Sí, siempre que sean mayores de 14 años",
+                            D: "Solo con autorización judicial previa"
+                        },
+                        correct: "B",
+                        explanation: "El Art. 3.a de la Ley 39/2015 reconoce capacidad de obrar a los menores de edad para el ejercicio y defensa de aquellos de sus derechos e intereses cuya actuación esté permitida por el ordenamiento jurídico sin la asistencia de la persona que ejerza la patria potestad, tutela o curatela."
+                    },
+                    {
+                        id: 202,
+                        question: "¿Cuál es el plazo general para la subsanación de una solicitud según la Ley 39/2015?",
+                        options: {
+                            A: "5 días",
+                            B: "10 días",
+                            C: "15 días",
+                            D: "1 mes"
+                        },
+                        correct: "B",
+                        explanation: "El Art. 68.1 de la Ley 39/2015 concede un plazo general de diez días (ampliable discrecionalmente hasta cinco días más en determinados casos) para subsanar deficiencias o aportar los documentos requeridos."
+                    },
+                    {
+                        id: 203,
+                        question: "Salvo fijación por norma comunitaria o ley, ¿cuál es el plazo máximo general para resolver y notificar un procedimiento administrativo?",
+                        options: {
+                            A: "1 mes",
+                            B: "3 meses",
+                            C: "6 meses",
+                            D: "1 año"
+                        },
+                        correct: "B",
+                        explanation: "El Art. 21.3 de la Ley 39/2015 fija que cuando las normas reguladoras de los procedimientos no fijen el plazo máximo, este será de tres meses."
+                    }
+                ]
+            }
+        };
+
+        // ==========================================
+        // APPLICATION CONTROLLER & LOGIC
+        // ==========================================
+
+        class QuizApp {
+            constructor() {
+                this.selectedTopicIds = [];
+                this.questionsPool = [];
+                this.currentIndex = 0;
+                this.userAnswers = []; // Records user performance
+                this.currentQuestion = null;
+                this.isAnswered = false;
+
+                // DOM Elements Cache
+                this.screens = {
+                    config: document.getElementById('config-screen'),
+                    quiz: document.getElementById('quiz-screen'),
+                    results: document.getElementById('results-screen')
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.renderTopicList();
+                this.updateTotalQuestionCounter();
+            }
+
+            // Render available topic checkboxes in the config screen
+            renderTopicList() {
+                const container = document.getElementById('topics-container');
+                container.innerHTML = '';
+
+                Object.keys(QUESTION_BANK).forEach(topicKey => {
+                    const topic = QUESTION_BANK[topicKey];
+                    const count = topic.questions.length;
+
+                    const label = document.createElement('label');
+                    label.className = "flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-indigo-50/50 hover:border-indigo-200 cursor-pointer transition-all";
+                    label.innerHTML = `
+                        <input type="checkbox" value="${topicKey}" checked class="topic-checkbox w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                        <div class="ml-3 flex-1 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-800">${topic.title}</span>
+                            <span class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-medium ml-2">${count} preg.</span>
+                        </div>
+                    `;
+                    container.appendChild(label);
+                });
+            }
+
+            // Calculate total questions in dataset
+            updateTotalQuestionCounter() {
+                let total = 0;
+                Object.values(QUESTION_BANK).forEach(t => total += t.questions.length);
+                document.getElementById('header-total-q').textContent = total;
+            }
+
+            // Select or Deselect all topics
+            selectAllTopics(status) {
+                const checkboxes = document.querySelectorAll('.topic-checkbox');
+                checkboxes.forEach(cb => cb.checked = status);
+                document.getElementById('topic-error').classList.add('hidden');
+            }
+
+            // Screen Switcher Helper
+            showScreen(screenName) {
+                Object.keys(this.screens).forEach(key => {
+                    if (key === screenName) {
+                        this.screens[key].classList.remove('hidden');
+                    } else {
+                        this.screens[key].classList.add('hidden');
+                    }
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            showConfigScreen() {
+                this.showScreen('config');
+            }
+
+            // Start Quiz Event
+            startQuiz(e) {
+                e.preventDefault();
+
+                // 1. Collect selected topics
+                const checkboxes = document.querySelectorAll('.topic-checkbox:checked');
+                this.selectedTopicIds = Array.from(checkboxes).map(cb => cb.value);
+
+                if (this.selectedTopicIds.length === 0) {
+                    document.getElementById('topic-error').classList.remove('hidden');
+                    return;
+                } else {
+                    document.getElementById('topic-error').classList.add('hidden');
+                }
+
+                // 2. Gather all matching questions
+                let pool = [];
+                this.selectedTopicIds.forEach(topicId => {
+                    const topic = QUESTION_BANK[topicId];
+                    if (topic) {
+                        topic.questions.forEach(q => {
+                            pool.push({
+                                ...q,
+                                topicTitle: topic.title
+                            });
+                        });
+                    }
+                });
+
+                // 3. Shuffle or Order questions
+                const orderOption = document.getElementById('question-order').value;
+                if (orderOption === 'random') {
+                    pool = this.shuffleArray(pool);
+                }
+
+                // 4. Limit questions count
+                const limit = parseInt(document.getElementById('question-limit').value, 10);
+                this.questionsPool = pool.slice(0, limit);
+
+                // 5. Reset states & Start
+                this.currentIndex = 0;
+                this.userAnswers = [];
+                this.showScreen('quiz');
+                this.loadQuestion();
+            }
+
+            // Load and Render current question
+            loadQuestion() {
+                this.isAnswered = false;
+                this.currentQuestion = this.questionsPool[this.currentIndex];
+
+                // Disable Next button initially
+                const nextBtn = document.getElementById('next-btn');
+                nextBtn.disabled = true;
+
+                // Hide explanation box
+                const explanationBox = document.getElementById('explanation-box');
+                explanationBox.classList.add('hidden');
+
+                // Update UI Badges & Progress
+                document.getElementById('current-topic-badge').textContent = this.currentQuestion.topicTitle;
+                document.getElementById('progress-text').textContent = `Pregunta ${this.currentIndex + 1} de ${this.questionsPool.length}`;
+                
+                const percentage = ((this.currentIndex + 1) / this.questionsPool.length) * 100;
+                document.getElementById('progress-bar').style.width = `${percentage}%`;
+
+                // Set Question Text
+                document.getElementById('question-text').textContent = `${this.currentIndex + 1}. ${this.currentQuestion.question}`;
+
+                // Render Options (A, B, C, D)
+                const optionsContainer = document.getElementById('options-container');
+                optionsContainer.innerHTML = '';
+
+                Object.keys(this.currentQuestion.options).forEach(key => {
+                    const optionText = this.currentQuestion.options[key];
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = `option-btn w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 flex items-start transition-all duration-200 group`;
+                    button.dataset.key = key;
+                    button.onclick = () => this.handleAnswerSelect(key);
+
+                    button.innerHTML = `
+                        <span class="option-key inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-sm mr-3 border border-slate-300 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors shrink-0">
+                            ${key}
+                        </span>
+                        <span class="text-sm font-medium text-slate-800 mt-0.5 leading-snug flex-1">${optionText}</span>
+                        <span class="option-icon ml-2 shrink-0 text-lg hidden"></span>
+                    `;
+
+                    optionsContainer.appendChild(button);
+                });
+            }
+
+            // Answer validation
+            handleAnswerSelect(selectedKey) {
+                if (this.isAnswered) return; // Prevent changing answer
+                this.isAnswered = true;
+
+                const isCorrect = (selectedKey === this.currentQuestion.correct);
+
+                // Record answer
+                this.userAnswers.push({
+                    question: this.currentQuestion,
+                    selectedOption: selectedKey,
+                    isCorrect: isCorrect
+                });
+
+                // Style option buttons
+                const buttons = document.querySelectorAll('.option-btn');
+                buttons.forEach(btn => {
+                    const key = btn.dataset.key;
+                    btn.classList.remove('hover:border-indigo-300', 'hover:bg-indigo-50/30');
+                    btn.classList.add('cursor-default');
+
+                    const iconSpan = btn.querySelector('.option-icon');
+                    const keySpan = btn.querySelector('.option-key');
+
+                    if (key === this.currentQuestion.correct) {
+                        // Highlight correct answer in Green
+                        btn.className = "option-btn w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50/60 flex items-start transition-all";
+                        keySpan.className = "option-key inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold text-sm mr-3 shrink-0";
+                        iconSpan.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
+                        iconSpan.classList.remove('hidden');
+                    } else if (key === selectedKey && !isCorrect) {
+                        // Highlight wrong answer in Red
+                        btn.className = "option-btn w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50/60 flex items-start transition-all";
+                        keySpan.className = "option-key inline-flex items-center justify-center w-7 h-7 rounded-lg bg-rose-600 text-white font-bold text-sm mr-3 shrink-0";
+                        iconSpan.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-600"></i>';
+                        iconSpan.classList.remove('hidden');
+                    } else {
+                        // Dim other options
+                        btn.classList.add('opacity-50');
+                    }
+                });
+
+                // Show Explanation Box
+                this.showExplanation(isCorrect);
+
+                // Enable Next Question Button
+                document.getElementById('next-btn').disabled = false;
+            }
+
+            // Display Explanation Box
+            showExplanation(isCorrect) {
+                const box = document.getElementById('explanation-box');
+                const icon = document.getElementById('explanation-icon');
+                const title = document.getElementById('explanation-title');
+                const text = document.getElementById('explanation-text');
+
+                box.classList.remove('hidden');
+
+                if (isCorrect) {
+                    box.className = "mb-6 p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 text-emerald-900";
+                    icon.innerHTML = '<i class="fa-solid fa-lightbulb text-emerald-600"></i>';
+                    title.textContent = "¡Respuesta Correcta!";
+                    title.className = "font-bold text-sm mb-1 text-emerald-800";
+                } else {
+                    box.className = "mb-6 p-4 rounded-xl border bg-slate-50 border-slate-200 text-slate-800";
+                    icon.innerHTML = '<i class="fa-solid fa-circle-info text-indigo-600"></i>';
+                    title.textContent = "Explicación / Justificación:";
+                    title.className = "font-bold text-sm mb-1 text-slate-900";
+                }
+
+                text.textContent = this.currentQuestion.explanation || "No hay explicación disponible para esta pregunta.";
+            }
+
+            // Go to next question or complete test
+            nextQuestion() {
+                this.currentIndex++;
+                if (this.currentIndex < this.questionsPool.length) {
+                    this.loadQuestion();
+                } else {
+                    this.finishQuiz();
+                }
+            }
+
+            // End Quiz & Render Results Screen
+            finishQuiz() {
+                this.showScreen('results');
+
+                const total = this.userAnswers.length;
+                const correctCount = this.userAnswers.filter(a => a.isCorrect).length;
+                const incorrectCount = total - correctCount;
+                const percentage = Math.round((correctCount / total) * 100);
+
+                // Update Stats
+                document.getElementById('score-correct').textContent = correctCount;
+                document.getElementById('score-incorrect').textContent = incorrectCount;
+                document.getElementById('score-percentage').textContent = `${percentage}%`;
+
+                // Badge styling depending on result
+                const badgeIcon = document.getElementById('result-badge-icon');
+                const title = document.getElementById('result-title');
+                const subtitle = document.getElementById('result-subtitle');
+
+                if (percentage >= 70) {
+                    badgeIcon.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-emerald-100 text-emerald-600";
+                    badgeIcon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                    title.textContent = "¡Excelente Resultado!";
+                    subtitle.textContent = "Has demostrado un buen dominio del temario.";
+                } else if (percentage >= 50) {
+                    badgeIcon.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-amber-100 text-amber-600";
+                    badgeIcon.innerHTML = '<i class="fa-solid fa-thumbs-up"></i>';
+                    title.textContent = "¡Aprobado!";
+                    subtitle.textContent = "Buen intento, pero conviene repasar algunos fallos.";
+                } else {
+                    badgeIcon.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 bg-rose-100 text-rose-600";
+                    badgeIcon.innerHTML = '<i class="fa-solid fa-book-bookmark"></i>';
+                    title.textContent = "Necesitas Repasar";
+                    subtitle.textContent = "Revisa las explicaciones de abajo para reforzar los conceptos.";
+                }
+
+                // Render Detailed Breakdown
+                const reviewList = document.getElementById('review-list');
+                reviewList.innerHTML = '';
+
+                this.userAnswers.forEach((ans, idx) => {
+                    const item = document.createElement('div');
+                    item.className = `p-4 rounded-xl border ${ans.isCorrect ? 'border-emerald-200 bg-emerald-50/30' : 'border-rose-200 bg-rose-50/30'}`;
+                    
+                    item.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <span class="text-xs font-semibold text-slate-500">${ans.question.topicTitle}</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-full ${ans.isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                ${ans.isCorrect ? 'Correcta' : 'Incorrecta'}
+                            </span>
+                        </div>
+                        <p class="font-semibold text-slate-800 text-sm mt-1">${idx + 1}. ${ans.question.question}</p>
+                        <div class="mt-2 text-xs space-y-1">
+                            <p class="${ans.isCorrect ? 'text-emerald-700 font-medium' : 'text-rose-700 font-medium'}">
+                                Tu respuesta: (${ans.selectedOption}) ${ans.question.options[ans.selectedOption]}
+                            </p>
+                            ${!ans.isCorrect ? `<p class="text-emerald-700 font-medium">Respuesta correcta: (${ans.question.correct}) ${ans.question.options[ans.question.correct]}</p>` : ''}
+                        </div>
+                        <p class="text-xs text-slate-600 mt-2 pt-2 border-t border-slate-200/60">
+                            <span class="font-bold text-slate-700">Explicación:</span> ${ans.question.explanation}
+                        </p>
+                    `;
+                    reviewList.appendChild(item);
+                });
+            }
+
+            // Repeat the current round
+            repeatRound() {
+                this.currentIndex = 0;
+                this.userAnswers = [];
+                this.questionsPool = this.shuffleArray([...this.questionsPool]);
+                this.showScreen('quiz');
+                this.loadQuestion();
+            }
+
+            // Utility: Exit test confirmation
+            confirmExit() {
+                if (confirm("¿Estás seguro de que deseas salir del test? Se perderá el progreso de esta ronda.")) {
+                    this.showConfigScreen();
+                }
+            }
+
+            // Utility: Shuffle array algorithm (Fisher-Yates)
+            shuffleArray(array) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+        }
+
+        // Initialize App on Window Load
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new QuizApp();
+        });
+    </script>
+</body>
+</html>
