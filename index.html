@@ -18,7 +18,7 @@
     </header>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <main class="max-w-2xl w-full mx-auto p-4 sm:p-6 my-auto flex-grow flex items-center">
+    <main class="max-w-3xl w-full mx-auto p-4 sm:p-6 my-auto flex-grow flex items-center">
 
         <!-- 1. PANTALLA DE CONFIGURACIÓN -->
         <section id="config-screen" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 w-full transition-all">
@@ -95,24 +95,72 @@
             </button>
         </section>
 
-        <!-- 3. PANTALLA DE RESULTADOS -->
+        <!-- 3. PANTALLA DE RESULTADOS Y REVISIÓN DETALLADA -->
         <section id="results-screen" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-6 w-full">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-full text-2xl font-bold mb-3 shadow-inner">
+            
+            <!-- Resumen Estadístico Superior -->
+            <div class="text-center mb-6 border-b border-slate-100 pb-6">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 text-blue-600 rounded-full text-3xl font-bold mb-3 shadow-inner">
                     <span id="score-percentage">0%</span>
                 </div>
                 <h2 class="text-2xl font-bold text-slate-900">¡Test Finalizado!</h2>
-                <p class="text-sm text-slate-500 mt-1">Has acertado <span id="score-correct" class="font-bold text-slate-700">0</span> de <span id="score-total" class="font-bold text-slate-700">0</span> preguntas.</p>
+
+                <!-- Tarjetas rápidas de Aciertos, Fallos y Tiempo -->
+                <div class="grid grid-cols-3 gap-3 my-4">
+                    <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-xl text-center">
+                        <span class="block text-xs text-emerald-600 font-semibold uppercase tracking-wider">Aciertos</span>
+                        <span id="score-correct" class="text-xl font-bold text-emerald-700">0</span>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-100 p-3 rounded-xl text-center">
+                        <span class="block text-xs text-rose-600 font-semibold uppercase tracking-wider">Fallos</span>
+                        <span id="score-incorrect" class="text-xl font-bold text-rose-700">0</span>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-center">
+                        <span class="block text-xs text-slate-500 font-semibold uppercase tracking-wider">Tiempo</span>
+                        <span id="score-time" class="text-xl font-bold text-slate-700">00:00</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="resetToConfig()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm">
+                        ⚙️ Configurar Nuevo Test
+                    </button>
+                    <button onclick="restartSameTest()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm shadow-md">
+                        🔄 Repetir Test
+                    </button>
+                </div>
             </div>
 
-            <div class="flex gap-3">
-                <button onclick="resetToConfig()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-colors text-sm">
-                    Configurar Nuevo Test
-                </button>
-                <button onclick="restartSameTest()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm shadow-md">
-                    Repetir Test
-                </button>
+            <!-- SECCIÓN DE REVISIÓN CON FILTROS -->
+            <div>
+                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <span>🔍 Revisión de Preguntas</span>
+                </h3>
+
+                <!-- Barra de Filtros -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                    <!-- Filtro Estado (Todas / Correctas / Incorrectas) -->
+                    <div class="flex rounded-lg bg-slate-200 p-1 text-xs font-semibold">
+                        <button onclick="setFilterStatus('all')" id="btn-filter-all" class="flex-1 py-1.5 px-3 rounded-md transition-all bg-white text-slate-800 shadow-sm">Todas</button>
+                        <button onclick="setFilterStatus('correct')" id="btn-filter-correct" class="flex-1 py-1.5 px-3 rounded-md transition-all text-slate-600 hover:text-slate-900">Correctas</button>
+                        <button onclick="setFilterStatus('incorrect')" id="btn-filter-incorrect" class="flex-1 py-1.5 px-3 rounded-md transition-all text-slate-600 hover:text-slate-900">Incorrectas</button>
+                    </div>
+
+                    <!-- Filtro Tema (Desplegable) -->
+                    <div class="flex items-center gap-2">
+                        <label for="filter-topic-select" class="text-xs font-semibold text-slate-600 whitespace-nowrap">Tema:</label>
+                        <select id="filter-topic-select" onchange="applyFilters()" class="bg-white border border-slate-300 text-xs font-medium text-slate-700 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto">
+                            <option value="all">Todos los temas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Lista de preguntas revisadas -->
+                <div id="review-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                    <!-- Se inyectan las tarjetas filtradas -->
+                </div>
             </div>
+
         </section>
 
     </main>
@@ -121,15 +169,23 @@
         Plataforma de Oposiciones &bull; Estudio Autónomo
     </footer>
 
-    <!-- 1. Carga del banco de preguntas externo -->
+    <!-- Carga del banco de preguntas externo -->
     <script src="index.js"></script>
 
-    <!-- 2. Lógica de la aplicación -->
+    <!-- Lógica principal -->
     <script>
         let currentQuizQuestions = [];
+        let userAnswers = []; // Guardará { questionObj, userChoice, isCorrect, topicTitle }
         let currentIndex = 0;
         let score = 0;
         let answeredCurrent = false;
+
+        // Cronómetro
+        let startTime = null;
+        let totalSeconds = 0;
+
+        // Filtros actuales de revisión
+        let currentStatusFilter = 'all';
 
         window.addEventListener('DOMContentLoaded', () => {
             if (typeof QUESTION_BANK !== 'undefined') {
@@ -207,7 +263,13 @@
             let pool = [];
             selectedTopics.forEach(key => {
                 if (QUESTION_BANK[key]) {
-                    pool = pool.concat(QUESTION_BANK[key].questions);
+                    // Guardamos la pregunta junto con la info de su tema
+                    const qList = QUESTION_BANK[key].questions.map(q => ({
+                        ...q,
+                        topicKey: key,
+                        topicTitle: QUESTION_BANK[key].title
+                    }));
+                    pool = pool.concat(qList);
                 }
             });
 
@@ -217,8 +279,12 @@
             pool.sort(() => Math.random() - 0.5);
 
             currentQuizQuestions = pool.slice(0, requestedNum);
+            userAnswers = [];
             currentIndex = 0;
             score = 0;
+
+            // Iniciar tiempo
+            startTime = new Date();
 
             document.getElementById('config-screen').classList.add('hidden');
             document.getElementById('test-screen').classList.remove('hidden');
@@ -233,7 +299,7 @@
             
             document.getElementById('current-index').textContent = currentIndex + 1;
             document.getElementById('total-questions-count').textContent = currentQuizQuestions.length;
-            document.getElementById('current-topic-badge').textContent = `Pregunta ${currentIndex + 1}`;
+            document.getElementById('current-topic-badge').textContent = q.topicTitle.split(':')[0] || 'Tema';
             
             const progress = ((currentIndex) / currentQuizQuestions.length) * 100;
             document.getElementById('progress-bar').style.width = `${progress}%`;
@@ -264,7 +330,15 @@
             answeredCurrent = true;
 
             const q = currentQuizQuestions[currentIndex];
+            const isCorrect = (letter === q.correct);
             const optionBtns = document.querySelectorAll('.option-btn');
+
+            // Guardar registro para la revisión final
+            userAnswers.push({
+                questionObj: q,
+                userChoice: letter,
+                isCorrect: isCorrect
+            });
 
             optionBtns.forEach(btn => {
                 const btnLetter = btn.dataset.letter;
@@ -282,12 +356,12 @@
                 }
             });
 
-            if (letter === q.correct) {
+            if (isCorrect) {
                 score++;
             }
 
             const expBox = document.getElementById('explanation-box');
-            expBox.className = `mb-6 p-4 rounded-xl border text-sm ${letter === q.correct ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'}`;
+            expBox.className = `mb-6 p-4 rounded-xl border text-sm ${isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'}`;
             expBox.innerHTML = `<strong>Explicación:</strong> ${q.explanation}`;
             expBox.classList.remove('hidden');
 
@@ -310,6 +384,13 @@
         }
 
         function showResults() {
+            // Calcular tiempo total
+            const endTime = new Date();
+            totalSeconds = Math.floor((endTime - startTime) / 1000);
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            const timeFormatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
             document.getElementById('test-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
             document.getElementById('header-subtitle').textContent = "Resultados";
@@ -317,7 +398,127 @@
             const percentage = Math.round((score / currentQuizQuestions.length) * 100);
             document.getElementById('score-percentage').textContent = `${percentage}%`;
             document.getElementById('score-correct').textContent = score;
-            document.getElementById('score-total').textContent = currentQuizQuestions.length;
+            document.getElementById('score-incorrect').textContent = currentQuizQuestions.length - score;
+            document.getElementById('score-time').textContent = timeFormatted;
+
+            // Rellenar el filtro desplegable de temas según los que entraron en esta ronda
+            populateTopicFilterSelect();
+
+            // Renderizar la lista filtrada de preguntas
+            currentStatusFilter = 'all';
+            updateFilterButtonsUI();
+            applyFilters();
+        }
+
+        function populateTopicFilterSelect() {
+            const select = document.getElementById('filter-topic-select');
+            select.innerHTML = '<option value="all">Todos los temas</option>';
+
+            const topicsInRound = new Map();
+            userAnswers.forEach(item => {
+                topicsInRound.set(item.questionObj.topicKey, item.questionObj.topicTitle);
+            });
+
+            topicsInRound.forEach((title, key) => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = title;
+                select.appendChild(opt);
+            });
+        }
+
+        function setFilterStatus(status) {
+            currentStatusFilter = status;
+            updateFilterButtonsUI();
+            applyFilters();
+        }
+
+        function updateFilterButtonsUI() {
+            const btnAll = document.getElementById('btn-filter-all');
+            const btnCorrect = document.getElementById('btn-filter-correct');
+            const btnIncorrect = document.getElementById('btn-filter-incorrect');
+
+            [btnAll, btnCorrect, btnIncorrect].forEach(btn => {
+                btn.className = "flex-1 py-1.5 px-3 rounded-md transition-all text-slate-600 hover:text-slate-900";
+            });
+
+            if (currentStatusFilter === 'all') {
+                btnAll.className = "flex-1 py-1.5 px-3 rounded-md transition-all bg-white text-slate-800 shadow-sm font-bold";
+            } else if (currentStatusFilter === 'correct') {
+                btnCorrect.className = "flex-1 py-1.5 px-3 rounded-md transition-all bg-emerald-600 text-white shadow-sm font-bold";
+            } else if (currentStatusFilter === 'incorrect') {
+                btnIncorrect.className = "flex-1 py-1.5 px-3 rounded-md transition-all bg-rose-600 text-white shadow-sm font-bold";
+            }
+        }
+
+        function applyFilters() {
+            const selectedTopicKey = document.getElementById('filter-topic-select').value;
+            const container = document.getElementById('review-list');
+            container.innerHTML = '';
+
+            const filtered = userAnswers.filter(item => {
+                // Filtro Estado
+                if (currentStatusFilter === 'correct' && !item.isCorrect) return false;
+                if (currentStatusFilter === 'incorrect' && item.isCorrect) return false;
+
+                // Filtro Tema
+                if (selectedTopicKey !== 'all' && item.questionObj.topicKey !== selectedTopicKey) return false;
+
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">No hay preguntas que coincidan con los filtros seleccionados.</div>`;
+                return;
+            }
+
+            filtered.forEach((item, idx) => {
+                const q = item.questionObj;
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border ${item.isCorrect ? 'bg-slate-50 border-slate-200' : 'bg-rose-50/40 border-rose-200'} space-y-3`;
+
+                let optionsHTML = '';
+                for (const [letter, text] of Object.entries(q.options)) {
+                    let styleClass = 'bg-white border-slate-200 text-slate-700';
+                    let badgeClass = 'bg-slate-100 text-slate-600';
+                    let indicator = '';
+
+                    if (letter === q.correct) {
+                        styleClass = 'bg-emerald-50 border-emerald-400 text-emerald-900 font-medium';
+                        badgeClass = 'bg-emerald-600 text-white font-bold';
+                        indicator = '<span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full ml-auto shrink-0">Correcta</span>';
+                    }
+                    
+                    if (letter === item.userChoice && !item.isCorrect) {
+                        styleClass = 'bg-rose-50 border-rose-400 text-rose-900 font-medium';
+                        badgeClass = 'bg-rose-600 text-white font-bold';
+                        indicator = '<span class="text-xs bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full ml-auto shrink-0">Tu respuesta</span>';
+                    }
+
+                    optionsHTML += `
+                        <div class="flex items-center gap-2.5 p-2.5 rounded-lg border text-xs sm:text-sm ${styleClass}">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full ${badgeClass} text-xs shrink-0">${letter}</span>
+                            <span class="leading-snug">${text}</span>
+                            ${indicator}
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between text-xs font-semibold">
+                        <span class="text-slate-500">${q.topicTitle}</span>
+                        ${item.isCorrect 
+                            ? '<span class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-md">✓ Acertada</span>' 
+                            : '<span class="text-rose-600 bg-rose-100 px-2 py-0.5 rounded-md">✗ Fallada</span>'}
+                    </div>
+                    <h4 class="font-semibold text-slate-900 text-sm sm:text-base">${q.question}</h4>
+                    <div class="space-y-1.5">${optionsHTML}</div>
+                    <div class="p-3 bg-white rounded-lg border border-slate-200 text-xs text-slate-600 leading-relaxed">
+                        <strong class="text-slate-800">Explicación:</strong> ${q.explanation}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
         function resetToConfig() {
@@ -331,8 +532,10 @@
             document.getElementById('results-screen').classList.add('hidden');
             document.getElementById('test-screen').classList.remove('hidden');
             document.getElementById('header-subtitle').textContent = "Modo Examen";
+            userAnswers = [];
             currentIndex = 0;
             score = 0;
+            startTime = new Date();
             currentQuizQuestions.sort(() => Math.random() - 0.5);
             loadQuestion();
         }
